@@ -4,7 +4,7 @@ A RAG system for PDF document processing and natural language querying.
 * Built using FastAPI and Mistral AI
 * Combines OCR processing, semantic search, and LLM generation to deliver accurate answers with proper source attribution from uploaded documents.
 
-### Project Overview
+### Implementation Overview
 ```
 pdfRAG-system/
 │
