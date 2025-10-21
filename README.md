@@ -122,30 +122,30 @@ User Upload
     ↓
 ┌───────────────────────────────────────┐
 │ PDF Upload Handler                    │
-│ • Validates file format and size      │
-│ • Saves to temporary storage          │
-│ • Returns upload confirmation         │
+│ • Validates file format and size     │
+│ • Saves to temporary storage         │
+│ • Returns upload confirmation        │
 └───────────────────────────────────────┘
     ↓
 ┌───────────────────────────────────────┐
-│ OCR Processing (Mistral AI)           │
-│ • Extracts text from pages            │
-│ • Processes embedded images           │
-│ • Generates structured markdown       │
+│ OCR Processing (Mistral AI)          │
+│ • Extracts text from pages           │
+│ • Processes embedded images          │
+│ • Generates structured markdown      │
 └───────────────────────────────────────┘
     ↓
 ┌───────────────────────────────────────┐
-│ Metadata Extraction (LLM)             │
-│ • Document type classification        │
-│ • Title and topic extraction          │
-│ • Confidence scoring                  │
+│ Metadata Extraction (LLM)            │
+│ • Document type classification       │
+│ • Title and topic extraction         │
+│ • Confidence scoring                 │
 └───────────────────────────────────────┘
     ↓
 ┌───────────────────────────────────────┐
 │ Content Structuring                   │
-│ • Organizes by page numbers           │
-│ • Splits into paragraphs              │
-│ • Saves as JSON with metadata         │
+│ • Organizes by page numbers          │
+│ • Splits into paragraphs             │
+│ • Saves as JSON with metadata        │
 └───────────────────────────────────────┘
 ```
 
@@ -156,23 +156,23 @@ Structured Document
     ↓
 ┌───────────────────────────────────────┐
 │ Semantic Chunking                     │
-│ • NLTK sentence tokenization          │
-│ • 400-word chunks with overlap        │
-│ • Context boundary preservation       │
+│ • NLTK sentence tokenization         │
+│ • 400-word chunks with overlap       │
+│ • Context boundary preservation      │
 └───────────────────────────────────────┘
     ↓
 ┌───────────────────────────────────────┐
 │ Vector Embedding (Batched)            │
-│ • Mistral embedding API calls         │
-│ • Processes in batches of 20          │
-│ • Checkpoint-based recovery           │
+│ • Mistral embedding API calls        │
+│ • Processes in batches of 20         │
+│ • Checkpoint-based recovery          │
 └───────────────────────────────────────┘
     ↓
 ┌───────────────────────────────────────┐
 │ Storage & Indexing                    │
-│ • NumPy arrays for vectors            │
-│ • JSON metadata persistence           │
-│ • BM25 index construction             │
+│ • NumPy arrays for vectors           │
+│ • JSON metadata persistence          │
+│ • BM25 index construction            │
 └───────────────────────────────────────┘
 ```
 
@@ -181,37 +181,37 @@ Structured Document
 ```
 User Question
     ↓
-┌───────────────────────────────────────-┐
-│ Conversational Query Check             │
-│ • Greeting detection (hello, hi, etc)  │
-│ • System questions (what can you do)   │
+┌───────────────────────────────────────┐
+│ Conversational Query Check            │
+│ • Greeting detection (hello, hi, etc)│
+│ • System questions (what can you do) │
 │ • Skip knowledge base if conversational│
-└───────────────────────────────────────-┘
+└───────────────────────────────────────┘
     ↓ (if document-related)
-┌──────────────────────────────────────────┐
-│ Query Preprocessing                      │
-│ • Intent detection & classification      │
-│ • LLM-based query enhancement            │
-│ • Cache lookup (MD5-based)               │
-└──────────────────────────────────────────┘
+┌───────────────────────────────────────┐
+│ Query Preprocessing                   │
+│ • Intent detection & classification  │
+│ • LLM-based query enhancement        │
+│ • Cache lookup (MD5-based)           │
+└───────────────────────────────────────┘
     ↓
 ┌───────────────────────────────────────┐
 │ Hybrid Search Execution               │
 │                                       │
-│  ┌─────────────────────────────────┐  │
-│  │ Semantic Branch                 │  │
-│  │ → Cosine similarity             │  │
-│  │ → Top-K vector matches          │  │
-│  └─────────────────────────────────┘  │
+│  ┌─────────────────────────────────┐ │
+│  │ Semantic Branch                 │ │
+│  │ → Cosine similarity             │ │
+│  │ → Top-K vector matches          │ │
+│  └─────────────────────────────────┘ │
 │                                       │
-│  ┌─────────────────────────────────┐  │
-│  │ Keyword Branch                  │  │
-│  │ → BM25 scoring                  │  │
-│  │ → Exact term matches            │  │
-│  └─────────────────────────────────┘  │
+│  ┌─────────────────────────────────┐ │
+│  │ Keyword Branch                  │ │
+│  │ → BM25 scoring                  │ │
+│  │ → Exact term matches            │ │
+│  └─────────────────────────────────┘ │
 │                                       │
 │  Weighted Fusion: 0.7×semantic + 0.3×keyword
-└──────────────────────────────────────────┘
+└───────────────────────────────────────┘
     ↓
 ┌───────────────────────────────────────┐
 │ Result Post-Processing                │
@@ -229,16 +229,16 @@ User Question
     ↓
 ┌───────────────────────────────────────┐
 │ Answer Generation                     │
-│ • LLM prompt construction             │
-│ • Source-grounded generation          │
-│ • Response formatting                 │
+│ • LLM prompt construction            │
+│ • Source-grounded generation         │
+│ • Response formatting                │
 └───────────────────────────────────────┘
     ↓
 ┌───────────────────────────────────────┐
 │ Verification & Safety                 │
-│ • Entailment checking                 │
-│ • PII detection                       │
-│ • Disclaimer injection (if needed)    │
+│ • Entailment checking                │
+│ • PII detection                      │
+│ • Disclaimer injection (if needed)   │
 └───────────────────────────────────────┘
     ↓
 Formatted Response with Citations
@@ -323,7 +323,7 @@ Interactive documentation available at: `http://localhost:8000/docs`
 
 ## Setup
 
-### Prerequisites
+### Prerequisites Checklist
 
 Before installation, ensure you have:
 - Python 3.8 or higher
@@ -445,9 +445,10 @@ Response includes document count, chunk count, and processing statistics.
 
 **Scalability Constraints**
 - In-memory vector storage limits corpus size to available RAM
-- No load distribution
+- No horizontal scaling or load distribution
 
 **Real-Time Features**
+- No streaming responses or live processing status updates
 - Single-turn conversation without multi-turn memory
 
 ---
