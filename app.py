@@ -41,88 +41,53 @@ class UploadResponse(BaseModel):
 # Global state
 class DocumentStore:
     def __init__(self):
-        self.client = None
+        self.client = Mistral(api_key=os.getenv('MISTRAL_API_KEY'))
         self.embeddings = None
         self.metadata = None
         self.is_ready = False
+        self._load_embeddings()
     
-    def initialize(self):
-        api_key = os.getenv('MISTRAL_API_KEY')
-        if not api_key:
-            raise ValueError("MISTRAL_API_KEY not found in environment")
-        
-        self.client = Mistral(api_key=api_key)
-        
-        # Try to load existing embeddings
+    def _load_embeddings(self):
         try:
             self.embeddings, self.metadata = load_embeddings_from_files()
             self.is_ready = True
-            print(f"Loaded existing embeddings: {len(self.metadata)} chunks")
-        except Exception as e:
-            print(f"No existing embeddings found: {e}")
+        except:
             self.is_ready = False
 
 store = DocumentStore()
 
-@app.on_event("startup")
-async def startup_event():
-    store.initialize()
+@app.get("/")
+async def root():
+    return {"message": "Document RAG API", "endpoints": ["/upload", "/query", "/status", "/clear"]}
 
 @app.post("/upload", response_model=UploadResponse)
 async def upload_documents(files: List[UploadFile] = File(...)):
     """Upload and process PDF documents"""
+    if not files or not all(f.filename.lower().endswith('.pdf') for f in files):
+        raise HTTPException(status_code=400, detail="Only PDF files are supported")
     
-    if not files:
-        raise HTTPException(status_code=400, detail="No files provided")
-    
-    # Validate file types
-    for file in files:
-        if not file.filename.lower().endswith('.pdf'):
-            raise HTTPException(
-                status_code=400, 
-                detail=f"Invalid file type: {file.filename}. Only PDF files are supported."
-            )
-    
-    processed_files = []
     all_chunks = []
+    processed_files = []
     
     for file in files:
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+            shutil.copyfileobj(file.file, tmp_file)
+            temp_path = tmp_file.name
+        
         try:
-            # Save uploaded file temporarily
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
-                shutil.copyfileobj(file.file, tmp_file)
-                temp_path = tmp_file.name
-            
-            # Process through your pipeline
             structured_json_path = process_pdf_complete(temp_path, store.client)
             chunks = semantic_chunk_document(structured_json_path, save_to_disk=False)
-            
-            # Add source filename to chunks
             for chunk in chunks:
                 chunk['source_file'] = file.filename
-            
             all_chunks.extend(chunks)
             processed_files.append(file.filename)
-            
-            # Clean up temp file
+        finally:
             os.unlink(temp_path)
-            
-        except Exception as e:
-            raise HTTPException(
-                status_code=500, 
-                detail=f"Error processing {file.filename}: {str(e)}"
-            )
     
     if all_chunks:
-        # Generate embeddings
         chunks_with_embeddings = generate_embeddings(all_chunks, store.client, save_npy=False)
-        
-        # Save embeddings
         save_embeddings(chunks_with_embeddings)
-        
-        # Reload embeddings into store
-        store.embeddings, store.metadata = load_embeddings_from_files()
-        store.is_ready = True
+        store._load_embeddings()
     
     return UploadResponse(
         message="Documents processed successfully",
@@ -133,75 +98,31 @@ async def upload_documents(files: List[UploadFile] = File(...)):
 @app.post("/query", response_model=QueryResponse)
 async def query_documents(request: QueryRequest):
     """Ask questions about uploaded documents"""
-    
     if not store.is_ready:
-        raise HTTPException(
-            status_code=400, 
-            detail="No documents available. Please upload PDF files first."
-        )
+        raise HTTPException(status_code=400, detail="No documents available. Please upload PDF files first.")
     
-    if not request.question.strip():
-        raise HTTPException(status_code=400, detail="Question cannot be empty")
-    
-    try:
-        # Use your existing pipeline
-        result = ask_document(
-            query=request.question,
-            embeddings=store.embeddings,
-            metadata=store.metadata,
-            mistral_client=store.client,
-            top_k=request.top_k,
-            show_sources=False
-        )
-        
-        return QueryResponse(
-            answer=result['answer'],
-            sources=result['sources']
-        )
-        
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, 
-            detail=f"Error processing query: {str(e)}"
-        )
+    result = ask_document(request.question, store.embeddings, store.metadata, store.client, request.top_k, False)
+    return QueryResponse(answer=result['answer'], sources=result['sources'])
 
 @app.get("/status")
 async def get_status():
     """Get system status"""
-    if store.is_ready:
-        return {
-            "status": "ready",
-            "total_chunks": len(store.metadata),
-            "documents_count": len(set(chunk.get('source_file', 'unknown') for chunk in store.metadata))
-        }
-    else:
-        return {
-            "status": "not_ready",
-            "total_chunks": 0,
-            "documents_count": 0
-        }
+    return {
+        "status": "ready" if store.is_ready else "not_ready",
+        "total_chunks": len(store.metadata) if store.metadata else 0,
+        "documents_count": len(set(chunk.get('source_file', 'unknown') for chunk in store.metadata)) if store.metadata else 0
+    }
 
 @app.delete("/clear")
 async def clear_documents():
     """Clear all documents and embeddings"""
-    try:
-        # Remove embeddings directory
-        embeddings_dir = Path("./embeddings")
-        if embeddings_dir.exists():
-            shutil.rmtree(embeddings_dir)
-        
-        # Reset store
-        store.embeddings = None
-        store.metadata = None
-        store.is_ready = False
-        
-        return {"message": "All documents cleared successfully"}
-        
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, 
-            detail=f"Error clearing documents: {str(e)}"
-        )
+    embeddings_dir = Path("./embeddings")
+    if embeddings_dir.exists():
+        shutil.rmtree(embeddings_dir)
+    store.embeddings = None
+    store.metadata = None
+    store.is_ready = False
+    return {"message": "All documents cleared successfully"}
 
 if __name__ == "__main__":
     import uvicorn
