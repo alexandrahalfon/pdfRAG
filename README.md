@@ -46,7 +46,7 @@ pdfRAG-system/
 **Advanced Search**
 - Hybrid retrieval combining vector similarity with keyword precision
 - Adaptive query processing based on question type classification
-- Sub-second response times with intelligent caching
+- Fast response times with caching
 - **Diversity Re-ranking**: Uses MMR (Maximal Marginal Relevance) to balance:
   - Relevance score (similarity to query)
   - Novelty score (dissimilarity to already-selected chunks)
