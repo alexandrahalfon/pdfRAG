@@ -107,7 +107,7 @@ async def upload_documents(files: List[UploadFile] = File(...)):
                 shutil.copyfileobj(file.file, tmp_file)
                 temp_path = tmp_file.name
             
-            # Process through your pipeline
+        
             structured_json_path = process_pdf_complete(temp_path, store.client)
             chunks = semantic_chunk_document(structured_json_path, save_to_disk=False)
             
@@ -158,14 +158,13 @@ async def query_documents(request: QueryRequest):
         raise HTTPException(status_code=400, detail="Question cannot be empty")
     
     try:
-        # Use your existing pipeline
         result = ask_document(
             query=request.question,
             embeddings=store.embeddings,
             metadata=store.metadata,
             mistral_client=store.client,
             top_k=request.top_k,
-            show_sources=False
+            show_sources=True
         )
         
         return QueryResponse(
