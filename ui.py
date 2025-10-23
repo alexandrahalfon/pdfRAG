@@ -29,9 +29,10 @@ if st.button("Upload") and files:
 # Query
 if ready:
     question = st.text_input("Ask a question:")
+    top_k = st.slider("Number of sources to retrieve:", min_value=1, max_value=10, value=3)
     if st.button("Ask") and question:
         with st.spinner("Searching..."):
-            result = requests.post(f"{API_BASE_URL}/query", json={"question": question})
+            result = requests.post(f"{API_BASE_URL}/query", json={"question": question, "top_k": top_k})
             if result.status_code == 200:
                 data = result.json()
                 st.write("**Answer:**", data['answer'])
