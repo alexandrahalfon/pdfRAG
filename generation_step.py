@@ -215,8 +215,8 @@ def ask_document(
         print('\nSources:')
         for i, chunk in enumerate(retrieved_chunks, 1):
             paragraph_info = f", Paragraph {chunk['paragraph']}" if 'paragraph' in chunk else ""
-            print(f'\n  Source {i} (Page {chunk['page']}{paragraph_info}, Score: {chunk['similarity_score']:.3f}):')
-            print(f'  {chunk['text'][:150]}...')
+            print(f'\n  Source {i} (Page {chunk["page"]}{paragraph_info}, Score: {chunk["similarity_score"]:.3f}):')
+            print(f'  {chunk["text"][:150]}...')
     
     print('\n' + '='*60)
     
